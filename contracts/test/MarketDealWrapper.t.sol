@@ -53,10 +53,7 @@ contract MarketDealWrapperTest is Test {
     function testOwnerCanAddToWhitelist() public {
         vm.prank(owner);
         wrapper.addToWhitelist(user);
-        assertTrue(
-            wrapper.whitelistedAddresses(user),
-            "User should be whitelisted"
-        );
+        assertTrue(wrapper.isWhitelisted(user), "User should be whitelisted");
     }
 
     function testOnlyOwnerCanRemoveFromWhitelist() public {
@@ -78,7 +75,7 @@ contract MarketDealWrapperTest is Test {
         vm.prank(owner);
         wrapper.removeFromWhitelist(user);
         assertFalse(
-            wrapper.whitelistedAddresses(user),
+            wrapper.isWhitelisted(user),
             "User should be removed from whitelist"
         );
     }

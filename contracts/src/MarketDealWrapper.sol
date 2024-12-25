@@ -64,7 +64,7 @@ contract MarketDealWrapper is Ownable(msg.sender) {
     }
 
     mapping(bytes => StorageProvider) public storageProviders;
-    mapping(address => bool) public whitelistedAddresses;
+    mapping(address => bool) public isWhitelisted;
     mapping(uint64 => DealPayment) public dealPayments;
     mapping(address => uint256) public ownerDeposits;
     mapping(address => mapping(IERC20 => uint256)) public ownerTokenDeposits;
@@ -115,12 +115,12 @@ contract MarketDealWrapper is Ownable(msg.sender) {
     );
 
     function addToWhitelist(address _address) external onlyOwner {
-        whitelistedAddresses[_address] = true;
+        isWhitelisted[_address] = true;
         emit AddressWhitelisted(_address);
     }
 
     function removeFromWhitelist(address _address) external onlyOwner {
-        whitelistedAddresses[_address] = false;
+        isWhitelisted[_address] = false;
         emit AddressRemovedFromWhitelist(_address);
     }
 
@@ -158,7 +158,7 @@ contract MarketDealWrapper is Ownable(msg.sender) {
             revert InvalidSignature();
         }
 
-        if (!whitelistedAddresses[recovered]) {
+        if (!isWhitelisted[recovered]) {
             revert UnauthorizedSender();
         }
     }
@@ -183,6 +183,10 @@ contract MarketDealWrapper is Ownable(msg.sender) {
             CommonTypes.ChainEpoch.unwrap(proposal.start_epoch);
 
         StorageProvider memory sp = storageProviders[proposal.provider.data];
+        // revert if SP doesn't exist
+        if (sp.ethAddr == address(0)) {
+            revert UnauthorizedMarketActor();
+        }
 
         // Naive computation of total payment for demonstration:
         // total = piece_size * sp.pricePerBytePerEpoch * duration
@@ -300,12 +304,6 @@ contract MarketDealWrapper is Ownable(msg.sender) {
     }
 
     function addFundsERC20(IERC20 token, uint256 amount) external onlyOwner {
-        // Approve this contract to spend the tokens
-        bool approved = token.approve(address(this), amount);
-        if (!approved) {
-            revert ApprovalFailed();
-        }
-
         // Transfer tokens from owner to this contract
         bool success = token.transferFrom(msg.sender, address(this), amount);
         if (!success) {
@@ -331,7 +329,7 @@ contract MarketDealWrapper is Ownable(msg.sender) {
         emit FundsWithdrawnToken(msg.sender, address(token), amount);
     }
 
-    function getCurrentEpoch() internal view returns (uint256) {
+    function getCurrentEpoch() public view returns (uint256) {
         return block.number;
     }
 
@@ -349,11 +347,10 @@ contract MarketDealWrapper is Ownable(msg.sender) {
             return 0;
         }
         DealPayment memory dp = dealPayments[dealId];
-        if (msg.sender != dp.sp) {
-            revert NotStorageProvider();
+        uint256 current = getCurrentEpoch();
+        if (current < dp.startEpoch) {
+            return 0;
         }
-        // approximate epoch
-        uint256 current = block.number;
         if (current > dp.endEpoch) {
             current = dp.endEpoch;
         }
@@ -363,8 +360,8 @@ contract MarketDealWrapper is Ownable(msg.sender) {
 
     // Renamed existing function
     function withdrawSpFundsForDeal(uint64 dealId) external {
-        DealPayment storage storageDp = dealPayments[dealId];
-        DealPayment memory dp = storageDp;
+        DealPayment storage s_dp = dealPayments[dealId];
+        DealPayment memory dp = s_dp;
         if (msg.sender != dp.sp) {
             revert NotStorageProvider();
         }
@@ -372,7 +369,7 @@ contract MarketDealWrapper is Ownable(msg.sender) {
         if (claimable == 0) {
             revert NoFundsToClaim();
         }
-        storageDp.withdrawn += claimable;
+        s_dp.withdrawn += claimable;
 
         if (address(dp.token) == address(0)) {
             if (address(this).balance < claimable) {
@@ -406,10 +403,10 @@ contract MarketDealWrapper is Ownable(msg.sender) {
             if (address(dp.token) != address(token)) {
                 continue;
             }
-            DealPayment storage storageDp = dealPayments[dealId];
+            DealPayment storage s_dp = dealPayments[dealId];
             uint256 claimable = getSpFundsForDeal(dealId);
             if (claimable > 0) {
-                storageDp.withdrawn += claimable;
+                s_dp.withdrawn += claimable;
                 totalClaimable += claimable;
             }
         }
@@ -470,7 +467,7 @@ contract MarketDealWrapper is Ownable(msg.sender) {
             revert NotStorageProvider();
         }
         // approximate epoch
-        uint256 current = block.number;
+        uint256 current = getCurrentEpoch();
         if (current > dp.endEpoch) {
             current = dp.endEpoch;
         }
@@ -514,6 +511,40 @@ contract MarketDealWrapper is Ownable(msg.sender) {
 
         // Retrieve deal IDs from spToDealIds using sp.ethAddr
         return spToDealIds[sp.ethAddr];
+    }
+
+    function getTokenFundsForSp(
+        IERC20 token,
+        uint64 actorId
+    ) public view returns (uint256) {
+        address spAddr = getSpFromId(actorId).ethAddr;
+        uint64[] memory deals = spToDealIds[spAddr];
+        uint256 totalClaimable;
+        uint256 dealCount = deals.length;
+
+        for (uint256 i = 0; i < dealCount; i++) {
+            uint64 dealId = deals[i];
+            DealPayment memory dp = dealPayments[dealId];
+            if (dp.sp != spAddr) {
+                continue;
+            }
+            if (address(dp.token) != address(token)) {
+                continue;
+            }
+            uint256 claimable = getSpFundsForDeal(dealId);
+            totalClaimable += claimable;
+        }
+
+        return totalClaimable;
+    }
+
+    function getSpFromId(
+        uint64 actorId
+    ) public view returns (StorageProvider memory) {
+        CommonTypes.FilAddress memory filAddr = FilAddresses.fromActorID(
+            actorId
+        );
+        return storageProviders[filAddr.data];
     }
 
     function addressToHexString(
