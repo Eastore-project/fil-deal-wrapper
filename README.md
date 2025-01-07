@@ -7,19 +7,21 @@ This repository provides a command-line interface (CLI) called **Wrapped Deal** 
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Prerequisites](#prerequisites)
-3. [Setup](#setup)
+2. [Architecture Overview](#architecture-overview)
+3. [Prerequisites](#prerequisites)
+4. [Setup](#setup)
    1. [Clone the Repository](#1-clone-the-repository)
    2. [Adjust the go.mod Replacement](#2-adjust-the-go-mod-replacement)
    3. [Build & Deploy the Smart Contract](#3-build--deploy-the-smart-contract)
    4. [Build the CLI](#4-build-the-cli)
    5. [Running the CLI](#5-running-the-cli)
-4. [CLI Usage Guide](#cli-usage-guide)
+5. [CLI Usage Guide](#cli-usage-guide)
    1. [fil](#1-fil)
    2. [write-contract](#2-write-contract)
    3. [read-contract](#3-read-contract)
-5. [IMPORTANT NOTES](#important-notes)
-6. [Additional Resources](#additional-resources)
+6. [Deal Making Flow Using Wrapped Deal](#deal-making-flow-using-wrapped-deal)
+7. [IMPORTANT NOTES](#important-notes)
+8. [Additional Resources](#additional-resources)
 
 ---
 
@@ -32,6 +34,41 @@ This repository provides a command-line interface (CLI) called **Wrapped Deal** 
 - Integrates with the Filecoin network using tools such as [Foundry](https://book.getfoundry.sh/) and [Boost](https://boost.filecoin.io/docs).
 
 ---
+
+## Architecture Overview
+
+The **Wrapped Deal** CLI interacts with the **MarketDealWrapper** smart contract to automate payments for Filecoin deals. The flow looks like this:
+
+```mermaid
+graph TD
+    A[Deploy MarketDealWrapper Contract] --> B[Add Storage Provider with Payment Token and Address]
+    B --> C[Whitelist f1 Address in Contract]
+    C --> D[Approve and Add Tokens for SP Payment]
+    D --> E[Make Boost Deal using Whitelisted Address]
+
+    subgraph Market_Actor_Calls[Market Actor Callbacks]
+        subgraph Notify[deal_notify]
+            F[Initialize Payment Schedule to SP]
+        end
+        subgraph Auth[authenticate_message]
+            H[Verify Signature]
+        end
+
+    end
+
+    E --> Market_Actor_Calls
+    Market_Actor_Calls --> J[SP Requests Payment Withdrawal]
+    J --> K{Check if Deal is Live}
+    K -->|Yes| L[Release Payment Based on Epochs Passed]
+    K -->|No| M[Pay Only for Maintained Period]
+
+    style A fill:#e1f5fe
+    style E fill:#e8f5e9
+    style Market_Actor_Calls fill:#fff3e0, color:#000000
+    style Auth fill:#ffe0b2, color:#000000
+    style Notify fill:#ffe0b2, color:#000000
+    style K fill:#fce4ec
+```
 
 ## Prerequisites
 
@@ -439,7 +476,7 @@ wrappedeal read-contract [subcommand] [flags] [parameters]
 
 ---
 
-### Deal Making Flow Using Wrapped Deal
+## Deal Making Flow Using Wrapped Deal
 
 Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal**. Each step includes a description of the action being performed along with the corresponding CLI command. Ensure that all flags are specified before the parameters.
 
@@ -490,18 +527,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
      "<ETH_ADDRESS>"
    ```
 
-5. **Make a Local Deal with the SP**
-
-   Create a local deal with the registered Storage Provider. This command uploads the specified file or folder, associates it with the SP, and records the deal in the contract.
-
-   ```bash
-   wrappedeal fil local-deal \
-     --path "<FILE_OR_FOLDER_PATH>" \
-     --provider "<SP_ADDRESS>" \
-     --contract "<CONTRACT_ADDRESS>"
-   ```
-
-6. **Approve ERC20 Tokens for the Contract**
+5. **Approve ERC20 Tokens for the Contract**
 
    Approve the `MarketDealWrapper` contract to spend a specified amount of your ERC20 tokens. This is necessary to facilitate the transfer of funds from your wallet to the contract for deal payments.
 
@@ -514,7 +540,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
      "<CONTRACT_ADDRESS>" "<AMOUNT>"
    ```
 
-7. **Add ERC20 Funds to the Contract**
+6. **Add ERC20 Funds to the Contract**
 
    Transfer approved ERC20 tokens to the `MarketDealWrapper` contract. These funds will be used to automatically pay the Storage Provider for the deals made.
 
@@ -525,6 +551,17 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
      --abi-path "<ABI_PATH>" \
      --rpc-url "<RPC_URL>" \
      "<TOKEN_ADDRESS>" "<AMOUNT>"
+   ```
+
+7. **Make a Local Deal with the SP**
+
+   Create a local deal with the registered Storage Provider. This command uploads the specified file or folder, associates it with the SP, and records the deal in the contract.
+
+   ```bash
+   wrappedeal fil local-deal \
+     --path "<FILE_OR_FOLDER_PATH>" \
+     --provider "<SP_ADDRESS>" \
+     --contract "<CONTRACT_ADDRESS>"
    ```
 
    **_Client Flow Complete_**
