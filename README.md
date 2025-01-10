@@ -482,7 +482,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
 
 1. **Deploy the `MarketDealWrapper` Contract**
 
-   Before initiating any deals, ensure that the `MarketDealWrapper` smart contract is deployed to your desired network (e.g., Anvil, testnet, or mainnet). This contract will handle the automated payments to Storage Providers (SPs).
+   Before initiating any deals, ensure that the `MarketDealWrapper` smart contract is deployed to your desired network (e.g., Anvil, testnet, or mainnet). This contract will handle the automated payments to Storage Providers (SPs). [[Deployed Contract](https://calibration.filfox.info/en/message/bafy2bzacedule3afprmjpp3q7v5a2zwjolqyfjqlrjxkanysezvakasjjx4vy)]
 
    ```bash
    forge create --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> src/MarketDealWrapper.sol:MarketDealWrapper
@@ -490,7 +490,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
 
 2. **Add a Storage Provider (SP)**
 
-   Register a Storage Provider with the `MarketDealWrapper` contract. This step associates the SP's actor ID, Ethereum address, ERC20 token, and pricing information with the contract, allowing clients to make deals with this SP.
+   Register a Storage Provider with the `MarketDealWrapper` contract. This step associates the SP's actor ID, Ethereum address, ERC20 token, and pricing information with the contract, allowing clients to make deals with this SP. [[Sp add trans](https://calibration.filfox.info/en/message/bafy2bzaceboj5grhqpenvbtzyw5dn7qoduh4dkcruo7hs62byo7tabnyi4vy4)]
 
    ```bash
    wrappedeal write-contract add-sp \
@@ -516,7 +516,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
 
 4. **Add the Obtained Address to Whitelist**
 
-   Add the retrieved Ethereum address to the contract's whitelist. This allows the address to interact with the `MarketDealWrapper` contract, enabling it to create and manage deals.
+   Add the retrieved Ethereum address to the contract's whitelist. This allows the address to interact with the `MarketDealWrapper` contract, enabling it to create and manage deals. [[Whitelist trans](https://calibration.filfox.info/en/message/bafy2bzaceceoocegnxblpqrawkwl55a2x32kcdnmyrny4r2oz4niw44cjsi2i)]
 
    ```bash
    wrappedeal write-contract add-to-whitelist \
@@ -542,7 +542,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
 
 6. **Add ERC20 Funds to the Contract**
 
-   Transfer approved ERC20 tokens to the `MarketDealWrapper` contract. These funds will be used to automatically pay the Storage Provider for the deals made.
+   Transfer approved ERC20 tokens to the `MarketDealWrapper` contract. These funds will be used to automatically pay the Storage Provider for the deals made. [[USDFC add trans](https://calibration.filfox.info/en/message/bafy2bzacebykgvm5psapxwzapk3xwtzzr5lb2tcx3hopufikdcsw4v344nb5o)]
 
    ```bash
    wrappedeal write-contract add-funds-erc20 \
@@ -555,7 +555,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
 
 7. **Make a Local Deal with the SP**
 
-   Create a local deal with the registered Storage Provider. This command uploads the specified file or folder, associates it with the SP, and records the deal in the contract.
+   Create a local deal with the registered Storage Provider. This command uploads the specified file or folder, associates it with the SP, and records the deal in the contract. [[on-chain deal](https://calibration.filfox.info/en/deal/209296)]
 
    ```bash
    wrappedeal fil local-deal \
@@ -568,7 +568,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
 
 8. **Storage Provider Withdraws Funds for a Deal**
 
-   The registered Storage Provider can withdraw funds for a specific deal at any time. Funds are vested and become available as per the epoch schedule defined in the contract.
+   The registered Storage Provider can withdraw funds for a specific deal at any time. Funds are vested and become available as per the epoch schedule defined in the contract. [[Sp's address claims USDFC](https://calibration.filfox.info/en/message/bafy2bzacebxhlbr2o47jmsckxze7vwex4rmnnn4pvqcds3yq2zv3beyczlajm)]
 
    ```bash
    wrappedeal write-contract withdraw-sp-funds-for-deal \
