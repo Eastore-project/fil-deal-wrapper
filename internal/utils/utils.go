@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/filecoin-project/go-address"
 )
 
 // getSize calculates the total size of the file or folder at the given path.
@@ -44,4 +46,21 @@ func ExpandPath(path string) (string, error) {
 		return filepath.Join(homeDir, path[1:]), nil
 	}
 	return path, nil
+}
+
+// getStringActorId converts a signerActorId to its string representation,
+// removes the first two characters ("f0" or "t0"), and returns the remaining string.
+// It returns an error if the signerActorId does not start with "f0" or "t0" or is too short.
+func GetStringActorId(signerActorId address.Address) (string, error) {
+    s := signerActorId.String()
+    if len(s) <= 2 {
+        return "", fmt.Errorf("invalid signerActorId: too short")
+    }
+
+    prefix := s[:2]
+    if prefix != "f0" && prefix != "t0" {
+        return "", fmt.Errorf("invalid signerActorId prefix: expected 'f0' or 't0', got '%s'", prefix)
+    }
+
+    return s[2:], nil
 }

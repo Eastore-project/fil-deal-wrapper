@@ -37,11 +37,11 @@ var ReadContractCmd = &cli.Command{
 	Usage:   "Read data from the MarketDealWrapper contract",
 	Subcommands: []*cli.Command{
 		{
-			Name:      "get-sp-id", // renamed from "getspid"
+			Name:      "get-sp-id", 
 			Aliases:   []string{"g"},
 			Usage:     "Get Storage Provider address by Actor ID from the MarketDealWrapper contract",
 			ArgsUsage: "<actor-id>",
-			Flags:     commonReadFlags, // removed actor-id flag
+			Flags:     commonReadFlags,
 			Action: func(c *cli.Context) error {
 				ctx := context.Background()
 				actorIdStr := c.Args().Get(0)
@@ -52,7 +52,6 @@ var ReadContractCmd = &cli.Command{
 				if err != nil {
 					return fmt.Errorf("invalid actor-id: %v", err)
 				}
-				params := contract.GetSpFromIdParams{ActorId: actorId}
 
 				client, err := eth.NewETHClient(
 					ctx,
@@ -62,13 +61,13 @@ var ReadContractCmd = &cli.Command{
 					return err
 				}
 
-				_, err = contract.GetSpFromIdAction(ctx, client, params)
+				_, err = contract.GetSpFromIdAction(ctx, client, actorId)
 				return err
 			},
 		},
 
 		{
-			Name:      "get-deals-from-miner-id", // renamed from "getDealsFromMinerId"
+			Name:      "get-deals-from-miner-id", 
 			Aliases:   []string{"gdfm"},
 			Usage:     "Retrieve deal IDs associated with a given miner ID from the MarketDealWrapper contract",
 			ArgsUsage: "<miner-id>",
@@ -96,16 +95,20 @@ var ReadContractCmd = &cli.Command{
 			},
 		},
 		{
-			Name:      "is-whitelisted", // renamed from "isWhitelisted"
+			Name:      "is-whitelisted",
 			Aliases:   []string{"iw"},
 			Usage:     "Check if an address is whitelisted in the MarketDealWrapper contract",
 			ArgsUsage: "<address>",
 			Flags:     commonReadFlags,
 			Action: func(c *cli.Context) error {
 				ctx := context.Background()
-				address := c.Args().Get(0)
-				if address == "" {
-					return fmt.Errorf("missing address argument")
+				actorIdStr := c.Args().Get(0)
+				if actorIdStr == "" {
+					return fmt.Errorf("missing actor-id argument")
+				}
+				actorId, err := strconv.ParseUint(actorIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("invalid actor-id: %v", err)
 				}
 
 				client, err := eth.NewETHClient(
@@ -115,12 +118,11 @@ var ReadContractCmd = &cli.Command{
 				if err != nil {
 					return err
 				}
-
-				return contract.IsWhitelistedAction(ctx, client, address)
+				return contract.IsWhitelistedAction(ctx, client, actorId)
 			},
 		},
 		{
-			Name:      "get-sp-funds-for-deal", // renamed from "getSpFundsForDeal"
+			Name:      "get-sp-funds-for-deal", 
 			Aliases:   []string{"gsffd"},
 			Usage:     "Retrieve the currently claimable SP funds for a specific deal from the MarketDealWrapper contract",
 			ArgsUsage: "<deal-id>",
@@ -148,10 +150,10 @@ var ReadContractCmd = &cli.Command{
 			},
 		},
 		{
-			Name:      "get-token-funds-for-sp", // renamed from "getTokenFundsForSP"
+			Name:      "get-token-funds-for-sp",
 			Aliases:   []string{"gtfsp"},
 			Usage:     "Retrieve the currently claimable SP funds for a specific ERC20 token and actor ID",
-			Flags:     commonReadFlags, // now only commonReadFlags
+			Flags:     commonReadFlags,
 			ArgsUsage: "<token> <actor-id>",
 			Action: func(c *cli.Context) error {
 				ctx := context.Background()

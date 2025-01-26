@@ -214,7 +214,6 @@ wrappedeal fil [subcommand] [flags]
    ```bash
    wrappedeal fil deal \
      --http-url "<HTTP_URL>" \
-     --http-headers "Key=Value" \
      --car-size <SIZE> \
      --provider "<SP_ADDRESS>" \
      --commp "<COMM_P>" \
@@ -252,7 +251,14 @@ wrappedeal fil [subcommand] [flags]
    ```bash
    wrappedeal fil get-eth-addr \
      --filecoin-addr "<FILECOIN_ADDRESS>" \
-     --repo "~/.boost-client"
+   ```
+
+5. **get-actor-id**  
+   Retrieve the Actor ID from a Filecoin address.
+
+   ```bash
+   wrappedeal fil get-actor-id \
+     --filecoin-addr "<FILECOIN_ADDRESS>" \
    ```
 
 ---
@@ -298,7 +304,7 @@ wrappedeal write-contract [subcommand] [flags] [parameters]
    ```
 
 3. **add-to-whitelist**  
-   Add an address to the whitelist in the MarketDealWrapper contract.
+   Add an Actor ID to the whitelist in the MarketDealWrapper contract.
 
    ```bash
    wrappedeal write-contract add-to-whitelist \
@@ -306,11 +312,11 @@ wrappedeal write-contract [subcommand] [flags] [parameters]
      --private-key "<PRIVATE_KEY>" \
      --abi-path "<ABI_PATH>" \
      --rpc-url "<RPC_URL>" \
-     "<ADDRESS_TO_WHITELIST>"
+     <ACTOR_ID>
    ```
 
 4. **remove-from-whitelist**  
-   Remove an address from the whitelist in the MarketDealWrapper contract.
+   Remove an Actor ID from the whitelist in the MarketDealWrapper contract.
 
    ```bash
    wrappedeal write-contract remove-from-whitelist \
@@ -318,7 +324,7 @@ wrappedeal write-contract [subcommand] [flags] [parameters]
      --private-key "<PRIVATE_KEY>" \
      --abi-path "<ABI_PATH>" \
      --rpc-url "<RPC_URL>" \
-     "<ADDRESS_TO_REMOVE>"
+     <ACTOR_ID>
    ```
 
 5. **add-funds**  
@@ -448,12 +454,12 @@ wrappedeal read-contract [subcommand] [flags] [parameters]
    ```
 
 3. **is-whitelisted**  
-   Check if an address is whitelisted.
+   Check if an Actor ID is whitelisted.
 
    ```bash
    wrappedeal read-contract is-whitelisted \
      --contract-address "<ADDRESS>" \
-     <address>
+     <ACTOR_ID>
    ```
 
 4. **get-sp-funds-for-deal**  
@@ -504,19 +510,18 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
      --price-per-tb-per-month <PRICE>
    ```
 
-3. **Get Ethereum Address of Wallet**
+3. **Get Actor ID of your Filecoin address**
 
-   Retrieve the Ethereum address corresponding to a specific Filecoin address configured in boost. This address will be used to sign proposals and interact with the smart contract. Caller should own this address.
+   To retrieve the actor ID from your Filecoin address, you can run:
 
    ```bash
-   wrappedeal read-contract get-eth-addr \
-     --contract-address "<CONTRACT_ADDRESS>" \
-    <FIlECOIN_ADDRESS>
+   wrappedeal fil get-actor-id \
+     --filecoin-addr "<FILECOIN_ADDRESS>" \
    ```
 
-4. **Add the Obtained Address to Whitelist**
+4. **Add the Actor ID to Whitelist**
 
-   Add the retrieved Ethereum address to the contract's whitelist. This allows the address to interact with the `MarketDealWrapper` contract, enabling it to create and manage deals. [[Whitelist trans](https://calibration.filfox.info/en/message/bafy2bzaceceoocegnxblpqrawkwl55a2x32kcdnmyrny4r2oz4niw44cjsi2i)]
+   Whitelist the actor ID(remove `t0` or `f0` prefix) in the MarketDealWrapper contract:
 
    ```bash
    wrappedeal write-contract add-to-whitelist \
@@ -524,12 +529,13 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
      --private-key "<PRIVATE_KEY>" \
      --abi-path "<ABI_PATH>" \
      --rpc-url "<RPC_URL>" \
-     "<ETH_ADDRESS>"
+     <ACTOR_ID>
    ```
 
 5. **Approve ERC20 Tokens for the Contract**
 
    Approve the `MarketDealWrapper` contract to spend a specified amount of your ERC20 tokens. This is necessary to facilitate the transfer of funds from your wallet to the contract for deal payments.
+   You can use USDFC stablecoin (Get address from [here](https://docs.secured.finance/stablecoin-protocol-guide/technical-resources)) for testing.
 
    ```bash
    wrappedeal write-contract approve-erc20 \
@@ -555,7 +561,7 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
 
 7. **Make a Local Deal with the SP**
 
-   Create a local deal with the registered Storage Provider. This command uploads the specified file or folder, associates it with the SP, and records the deal in the contract. [[on-chain deal](https://calibration.filfox.info/en/deal/209296)]
+   Create a local deal with the registered Storage Provider. This command uploads the specified file or folder, associates it with the SP, and records the deal in the contract. The `verified` tag is set to `true` by default. You can get DataCap in Calibnet for your contract from [here](https://faucet.calibnet.chainsafe-fil.io/). [[on-chain deal](https://calibration.filfox.info/en/deal/209296)]
 
    ```bash
    wrappedeal fil local-deal \
@@ -604,14 +610,18 @@ Follow the steps below to create and manage a Filecoin deal using **Wrapped Deal
      }
      ```
 
-3. **Wallet Type**
+3. **Wallet Type for `get-eth-addr`**
 
-   - The default wallet should be `secp256k1` as is used for contract signature matching, `bls` is not supported.
+   - The default wallet should be `secp256k1` as we can derive eth-address for that only, `bls` is not supported.
 
 4. **Build Issues**
 
    - If you encounter build issues, ensure that the go.mod file is correctly set up with boost path, etc as mentioned in the prerequisites.
    - Verify that the correct version of Go is installed.
+
+5. **Actor ID initialization**
+
+   - Ensure that the Actor ID is initialized correctly for your addresses you are using. You may need to fund the smart contract or EOA with small amounts of FIL to initialize the Actor.
 
 ## Additional Resources
 

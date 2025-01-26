@@ -14,9 +14,9 @@ import {CBOR} from "lib/filecoin-solidity/lib/solidity-cborutils/contracts/CBOR.
 import {Misc} from "lib/filecoin-solidity/contracts/v0.8/utils/Misc.sol";
 import {FilAddresses} from "lib/filecoin-solidity/contracts/v0.8/utils/FilAddresses.sol";
 import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
-import {BLAKE2b} from "./blake2lib.sol";
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {AccountAPI} from "lib/filecoin-solidity/contracts/v0.8/AccountAPI.sol";
 
 // Events
 event DealNotify(
@@ -62,6 +62,8 @@ event SpPaymentWithdrawnToken(
     address indexed token,
     uint256 amount
 );
+event ActorIdWhitelisted(uint64 actorId);
+event ActorIdRemovedFromWhitelist(uint64 actorId);
 
 // Errors
 error UnauthorizedMarketActor();
@@ -118,7 +120,7 @@ contract MarketDealWrapper is Ownable {
         address(0xfF00000000000000000000000000000000000007);
 
     mapping(bytes => StorageProvider) public storageProviders;
-    mapping(address => bool) public isWhitelisted;
+    mapping(uint64 => bool) public isWhitelisted;
     mapping(uint64 => DealPayment) public dealPayments;
     mapping(address => uint256) public ownerDeposits;
     mapping(address => mapping(IERC20 => uint256)) public ownerTokenDeposits;
@@ -128,8 +130,8 @@ contract MarketDealWrapper is Ownable {
     /**
      * @dev Ensures that only whitelisted addresses can execute certain functions.
      */
-    modifier onlyWhitelisted(address _address) {
-        if (!isWhitelisted[_address]) {
+    modifier onlyWhitelisted(uint64 _actorId) {
+        if (!isWhitelisted[_actorId]) {
             revert UnauthorizedSender();
         }
         _;
@@ -143,22 +145,23 @@ contract MarketDealWrapper is Ownable {
      */
     constructor() Ownable(msg.sender) {}
 
+
     /**
-     * @notice Adds an address to the whitelist.
-     * @param _address The address to be whitelisted.
+     * @notice Adds an actor ID to the whitelist.
+     * @param _actorId The actor ID to be whitelisted.
      */
-    function addToWhitelist(address _address) external onlyOwner {
-        isWhitelisted[_address] = true;
-        emit AddressWhitelisted(_address);
+    function addToWhitelist(uint64 _actorId) external onlyOwner {
+        isWhitelisted[_actorId] = true;
+        emit ActorIdWhitelisted(_actorId);
     }
 
     /**
-     * @notice Removes an address from the whitelist.
-     * @param _address The address to be removed from the whitelist.
+     * @notice Removes an actor ID from the whitelist.
+     * @param _actorId The actor ID to be removed from the whitelist.
      */
-    function removeFromWhitelist(address _address) external onlyOwner {
-        isWhitelisted[_address] = false;
-        emit AddressRemovedFromWhitelist(_address);
+    function removeFromWhitelist(uint64 _actorId) external onlyOwner {
+        isWhitelisted[_actorId] = false;
+        emit ActorIdRemovedFromWhitelist(_actorId);
     }
 
     /**
@@ -192,17 +195,19 @@ contract MarketDealWrapper is Ownable {
             .deserializeAuthenticateMessageParams();
         MarketTypes.DealProposal memory proposal = MarketCBOR
             .deserializeDealProposal(amp.message);
-        bytes memory encodedData = convertAsciiHexToBytes(proposal.label.data);
-        address filAddress = abi.decode(encodedData, (address));
-        address recovered = recovers(
-            bytes32(BLAKE2b.hash(amp.message, "", "", "", 32)),
-            amp.signature
+        uint64 actorId = uint64(asciiBytesToUint(proposal.label.data));
+
+        // Use AccountAPI to authenticate signature
+        int256 exitCode = AccountAPI.authenticateMessage(
+            CommonTypes.FilActorId.wrap(actorId),
+            amp
         );
-        if (recovered != filAddress) {
+        if (exitCode != 0) {
             revert InvalidSignature();
         }
 
-        if (!isWhitelisted[recovered]) {
+        // Check if actorId is whitelisted
+        if (!isWhitelisted[actorId]) {
             revert UnauthorizedSender();
         }
     }

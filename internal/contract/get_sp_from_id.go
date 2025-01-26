@@ -11,15 +11,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// GetSpFromIdParams holds parameters for retrieving storage provider by Actor ID
-type GetSpFromIdParams struct {
-	ActorId uint64
-}
-
 // GetSpFromIdAction performs the CLI action to get storage provider details by Actor ID
-func GetSpFromIdAction(ctx context.Context, client *types.ETHClient, params GetSpFromIdParams) (*StorageProviderParams, error) {
+func GetSpFromIdAction(ctx context.Context, client *types.ETHClient, actorId uint64) (*StorageProviderParams, error) {
 	// Prepare call input
-	input, err := client.ContractABI.Pack("getSpFromId", params.ActorId)
+	input, err := client.ContractABI.Pack("getSpFromId", actorId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pack parameters: %v", err)
 	}
