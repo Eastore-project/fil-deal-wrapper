@@ -2,7 +2,6 @@ package filecoin
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -102,7 +101,7 @@ func MakeDeal(
 		return err
 	}
 
-	fmt.Println("selected wallet", "wallet", walletAddr)
+	fmt.Println("selected ", "wallet", walletAddr)
 
 	maddr, err := address.NewFromString(provider)
 	if err != nil {
@@ -189,7 +188,6 @@ func MakeDeal(
 	}
 
 	head := tipset.Height()
-	fmt.Println("current block height", "number", head)
 
 	if startEpochHeadOffset > 0 && startEpoch > 0 {
 		return errors.New("only one flag from `start-epoch-head-offset' or `start-epoch` can be specified")
@@ -211,9 +209,24 @@ func MakeDeal(
 			"Filecoin f4 address: %w", ethAddr, err)
 	}
 
+	// put the signer's actorId in label for signer verification in contract
+	signerActorId, err := api.StateLookupID(ctx, walletAddr, chain_types.EmptyTSK)
+	if err != nil {
+		return fmt.Errorf("failed to lookup actorId for signer address: %w", err)
+	}
+	stringActorId, err := utils.GetStringActorId(signerActorId)
+	if err != nil {
+		return fmt.Errorf("failed to convert actorId to string: %w", err)
+	}
+
+	label, err := market.NewLabelFromString(stringActorId)
+	if err != nil {
+		return fmt.Errorf("failed to create label: %w", err)
+	}
+
 	// Create a deal proposal to storage provider using deal protocol v1.2.0 format
 	dealProposal, err := DealProposal(
-		ctx, n, filClient, walletAddr, abi.PaddedPieceSize(pieceSize), pieceCid, maddr, effectiveStartEpoch, duration, verified, providerCollateralAmount, abi.NewTokenAmount(storagePrice),
+		ctx, n, filClient, walletAddr, abi.PaddedPieceSize(pieceSize), pieceCid, maddr, label, effectiveStartEpoch, duration, verified, providerCollateralAmount, abi.NewTokenAmount(storagePrice),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create a deal proposal: %w", err)
@@ -268,34 +281,19 @@ func MakeDeal(
 	return nil
 }
 
-func DealProposal(ctx context.Context, n *clinode.Node, clientAddr address.Address, signerAddr address.Address, pieceSize abi.PaddedPieceSize, pieceCid cid.Cid, minerAddr address.Address, startEpoch abi.ChainEpoch, duration int, verified bool, providerCollateral abi.TokenAmount, storagePrice abi.TokenAmount) (*market.ClientDealProposal, error) {
+func DealProposal(ctx context.Context, n *clinode.Node, clientAddr address.Address, signerAddr address.Address, pieceSize abi.PaddedPieceSize, pieceCid cid.Cid, minerAddr address.Address, label market.DealLabel, startEpoch abi.ChainEpoch, duration int, verified bool, providerCollateral abi.TokenAmount, storagePrice abi.TokenAmount) (*market.ClientDealProposal, error) {
 	endEpoch := startEpoch + abi.ChainEpoch(duration)
 	// deal proposal expects total storage price for deal per epoch, therefore we
 	// multiply pieceSize * storagePrice (which is set per epoch per GiB) and divide by 2^30
 	storagePricePerEpochForDeal := big.Div(big.Mul(big.NewInt(int64(pieceSize)), storagePrice), big.NewInt(int64(1<<30)))
 
-	// Get signer's derived ethereum address to put in label to be checked during authenticate_message
-	signerEthAddr, err := DeriveEthAddr(ctx, n, signerAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to derive signer's ethereum address: %w", err)
-	}
-	encodedAddr, err := utils.EncodeAddress(signerEthAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to encode signer's ethereum address: %w", err)
-	}
-
-	l, err := market.NewLabelFromString(hex.EncodeToString(encodedAddr))
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("client address", clientAddr)
 	proposal := market.DealProposal{
 		PieceCID:             pieceCid,
 		PieceSize:            pieceSize,
 		VerifiedDeal:         verified,
 		Client:               clientAddr,
 		Provider:             minerAddr,
-		Label:                l,
+		Label:                label,
 		StartEpoch:           startEpoch,
 		EndEpoch:             endEpoch,
 		StoragePricePerEpoch: storagePricePerEpochForDeal,

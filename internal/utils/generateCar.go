@@ -14,20 +14,26 @@ import (
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	commp "github.com/filecoin-project/go-fil-commp-hashhash"
 	"github.com/google/uuid"
-	"github.com/tech-greedy/go-generate-car/util"
 )
-
+type Result struct {
+	Ipld      *FsNode
+	DataCid   string
+	PieceCid  string
+	PieceSize uint64
+	CidMap    map[string]CidMapValue
+	CarSize   uint64
+}
 type CarParams types.CarParams
 
 const BufSize = (4 << 20) / 128 * 127
 
-func (c *CarParams) GenerateCar() (types.Result, error) {
+func (c *CarParams) GenerateCarUtil() (Result, error) {
 	ctx := context.Background()
-	var input []util.Finfo
+	var input []Finfo
 	if c.Single {
 		stat, err := os.Stat(c.Input)
 		if err != nil {
-			return types.Result{}, err
+			return Result{}, err
 		}
 		if stat.IsDir() {
 			err := filepath.Walk(c.Input, func(path string, info os.FileInfo, err error) error {
@@ -37,7 +43,7 @@ func (c *CarParams) GenerateCar() (types.Result, error) {
 				if info.IsDir() {
 					return nil
 				}
-				input = append(input, util.Finfo{
+				input = append(input, Finfo{
 					Path:  path,
 					Size:  info.Size(),
 					Start: 0,
@@ -46,10 +52,10 @@ func (c *CarParams) GenerateCar() (types.Result, error) {
 				return nil
 			})
 			if err != nil {
-				return types.Result{}, err
+				return Result{}, err
 			}
 		} else {
-			input = append(input, util.Finfo{
+			input = append(input, Finfo{
 				Path:  c.Input,
 				Size:  stat.Size(),
 				Start: 0,
@@ -63,19 +69,19 @@ func (c *CarParams) GenerateCar() (types.Result, error) {
 			buf := new(bytes.Buffer)
 			_, err := buf.ReadFrom(reader)
 			if err != nil {
-				return types.Result{}, err
+				return Result{}, err
 			}
 			inputBytes = buf.Bytes()
 		} else {
 			bytes, err := os.ReadFile(c.Input)
 			if err != nil {
-				return types.Result{}, err
+				return Result{}, err
 			}
 			inputBytes = bytes
 		}
 		err := json.Unmarshal(inputBytes, &input)
 		if err != nil {
-			return types.Result{}, err
+			return Result{}, err
 		}
 	}
 
@@ -83,25 +89,25 @@ func (c *CarParams) GenerateCar() (types.Result, error) {
 	outPath := path.Join(c.OutDir, outFilename)
 	carF, err := os.Create(outPath)
 	if err != nil {
-		return types.Result{}, err
+		return Result{}, err
 	}
 	cp := new(commp.Calc)
 	writer := bufio.NewWriterSize(io.MultiWriter(carF, cp), BufSize)
-	ipld, cid, cidMap, err := util.GenerateCar(ctx, input, c.Parent, c.TmpDir, writer)
+	ipld, cid, cidMap, err := GenerateCar(ctx, input, c.Parent, c.TmpDir, writer)
 	if err != nil {
-		return types.Result{}, err
+		return Result{}, err
 	}
 	err = writer.Flush()
 	if err != nil {
-		return types.Result{}, err
+		return Result{}, err
 	}
 	err = carF.Close()
 	if err != nil {
-		return types.Result{}, err
+		return Result{}, err
 	}
 	rawCommP, pieceSize, err := cp.Digest()
 	if err != nil {
-		return types.Result{}, err
+		return Result{}, err
 	}
 	if c.PieceSize > 0 {
 		rawCommP, err = commp.PadCommP(
@@ -110,19 +116,19 @@ func (c *CarParams) GenerateCar() (types.Result, error) {
 			c.PieceSize,
 		)
 		if err != nil {
-			return types.Result{}, err
+			return Result{}, err
 		}
 		pieceSize = c.PieceSize
 	}
 	commCid, err := commcid.DataCommitmentV1ToCID(rawCommP)
 	if err != nil {
-		return types.Result{}, err
+		return Result{}, err
 	}
 	err = os.Rename(outPath, path.Join(c.OutDir, commCid.String()+".car"))
 	if err != nil {
-		return types.Result{}, err
+		return Result{}, err
 	}
-	result := types.Result{
+	result := Result{
 		Ipld:      ipld,
 		DataCid:   cid,
 		PieceCid:  commCid.String(),

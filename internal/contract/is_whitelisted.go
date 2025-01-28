@@ -6,16 +6,13 @@ import (
 	"wrappedeal/internal/types"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // IsWhitelistedAction checks if a given address is whitelisted
-func IsWhitelistedAction(ctx context.Context, client *types.ETHClient, address string) error {
-	// Convert string address to common.Address
-	addr := common.HexToAddress(address)
+func IsWhitelistedAction(ctx context.Context, client *types.ETHClient, actorId uint64) error {
 
 	// Prepare call input
-	input, err := client.ContractABI.Pack("isWhitelisted", addr)
+	input, err := client.ContractABI.Pack("isWhitelisted", actorId)
 	if err != nil {
 		return fmt.Errorf("failed to pack parameters: %v", err)
 	}
@@ -38,6 +35,6 @@ func IsWhitelistedAction(ctx context.Context, client *types.ETHClient, address s
 		return fmt.Errorf("failed to unpack result: %v", err)
 	}
 
-	fmt.Printf("Is address %s whitelisted? %t\n", address, isWhitelisted)
+	fmt.Printf("Is actor-id %d whitelisted? %t\n", actorId, isWhitelisted)
 	return nil
 }

@@ -86,6 +86,28 @@ var FilCmd = &cli.Command{
 				return filecoin.GetEthAddr(ctx, filecoinAddrStr, repoPath)
 			},
 		},
+		{
+			Name:  "get-actor-id",
+			Usage: "Get the Actor ID from a Filecoin address",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "filecoin-addr",
+					Aliases:  []string{"f"},
+					Usage:    "Filecoin address to get the actor ID",
+					Required: false,
+				},
+				&cli.StringFlag{
+					Name:     "repo",
+					Aliases:  []string{"R"},
+					Usage:    "Boost client repository directory path (default: ~/.boost-client)",
+					Value:    "~/.boost-client",
+					Required: false,
+				},
+			},
+			Action: func(cctx *cli.Context) error {
+				return filecoin.GetActorIdAction(cctx)
+			},
+		},
 	},
 }
 

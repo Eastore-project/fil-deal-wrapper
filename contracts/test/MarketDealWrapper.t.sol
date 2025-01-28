@@ -23,6 +23,7 @@ contract MarketDealWrapperTest is Test {
     address owner = address(1);
     address user = address(2);
     address sp = address(3);
+    uint64 constant userActorId = 1010;
 
     function setUp() public {
         // Deploy Mock ERC20 Token
@@ -47,36 +48,39 @@ contract MarketDealWrapperTest is Test {
     function testOnlyOwnerCanAddToWhitelist() public {
         vm.prank(user);
         vm.expectRevert();
-        wrapper.addToWhitelist(user);
+        wrapper.addToWhitelist(userActorId); // changed from user
     }
 
     function testOwnerCanAddToWhitelist() public {
         vm.prank(owner);
-        wrapper.addToWhitelist(user);
-        assertTrue(wrapper.isWhitelisted(user), "User should be whitelisted");
+        wrapper.addToWhitelist(userActorId); // changed from user
+        assertTrue(
+            wrapper.isWhitelisted(userActorId),
+            "Actor ID should be whitelisted"
+        ); // changed from user
     }
 
     function testOnlyOwnerCanRemoveFromWhitelist() public {
         // First, add to whitelist
         vm.prank(owner);
-        wrapper.addToWhitelist(user);
+        wrapper.addToWhitelist(userActorId); // changed from user
 
         vm.prank(user);
         vm.expectRevert();
-        wrapper.removeFromWhitelist(user);
+        wrapper.removeFromWhitelist(userActorId); // changed from user
     }
 
     function testOwnerCanRemoveFromWhitelist() public {
         // First, add to whitelist
         vm.prank(owner);
-        wrapper.addToWhitelist(user);
+        wrapper.addToWhitelist(userActorId); // changed from user
 
         // Remove from whitelist
         vm.prank(owner);
-        wrapper.removeFromWhitelist(user);
+        wrapper.removeFromWhitelist(userActorId); // changed from user
         assertFalse(
-            wrapper.isWhitelisted(user),
-            "User should be removed from whitelist"
+            wrapper.isWhitelisted(userActorId), // changed from user
+            "Actor ID should be removed from whitelist" // changed from user
         );
     }
 

@@ -18,7 +18,7 @@ import (
 func UpdateStorageProviderAction(ctx context.Context, client *types.ETHClient, params StorageProviderParams) error {
 	// If EthAddr or Token is not provided, fetch existing storage provider details
 	if params.EthAddr == (common.Address{}) || params.Token == (common.Address{}) {
-		spDetails, err := GetSpFromIdAction(ctx, client, GetSpFromIdParams{ActorId: params.ActorId})
+		spDetails, err := GetSpFromIdAction(ctx, client,  params.ActorId)
 		if err != nil {
 			return fmt.Errorf("failed to fetch existing storage provider details: %v", err)
 		}

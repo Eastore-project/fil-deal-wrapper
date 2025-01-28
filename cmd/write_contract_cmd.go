@@ -146,18 +146,22 @@ var WriteContractCmd = &cli.Command{
 		{
 			Name:      "add-to-whitelist",
 			Aliases:   []string{"atw"},
-			Usage:     "Add an address to the whitelist in the MarketDealWrapper contract. Get ethAddress using fil get-eth-addr command",
-			ArgsUsage: "<address>",
+			Usage:     "Add an address's actor id to the whitelist in the MarketDealWrapper contract. Get actor-id using fil get-actor-id command",
+			ArgsUsage: "<actor-id>",
 			Flags:     commonWriteFlags,
 
 			Action: func(c *cli.Context) error {
 				ctx := context.Background()
 
 				// Retrieve the address from arguments
-				if c.Args().Len() < 1 {
-					return fmt.Errorf("address argument is required")
+				actorIdStr := c.Args().Get(0)
+				if actorIdStr == "" {
+					return fmt.Errorf("missing actor-id argument")
 				}
-				address := c.Args().Get(0)
+				actorId, err := strconv.ParseUint(actorIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("invalid actor-id: %v", err)
+				}
 
 				client, err := eth.NewETHClient(
 					ctx,
@@ -166,23 +170,27 @@ var WriteContractCmd = &cli.Command{
 				if err != nil {
 					return err
 				}
-				return contract.AddToWhitelistAction(ctx, client, address)
+				return contract.AddToWhitelistAction(ctx, client, actorId)
 			},
 		},
 		{
 			Name:      "remove-from-whitelist",
 			Aliases:   []string{"rfw"},
-			Usage:     "Remove an address from the whitelist in the MarketDealWrapper contract. Get ethAddress using fil get-eth-addr command",
-			ArgsUsage: "<address>",
+			Usage:     "Remove an address's actor id to the whitelist in the MarketDealWrapper contract. Get actor-id using fil get-actor-id command",
+			ArgsUsage: "<actor-id>",
 			Flags:     commonWriteFlags,
 			Action: func(c *cli.Context) error {
 				ctx := context.Background()
 
 				// Retrieve the address from arguments
-				if c.Args().Len() < 1 {
-					return fmt.Errorf("address argument is required")
+				actorIdStr := c.Args().Get(0)
+				if actorIdStr == "" {
+					return fmt.Errorf("missing actor-id argument")
 				}
-				address := c.Args().Get(0)
+				actorId, err := strconv.ParseUint(actorIdStr, 10, 64)
+				if err != nil {
+					return fmt.Errorf("invalid actor-id: %v", err)
+				}
 
 				client, err := eth.NewETHClient(
 					ctx,
@@ -191,7 +199,7 @@ var WriteContractCmd = &cli.Command{
 				if err != nil {
 					return err
 				}
-				return contract.RemoveFromWhitelistAction(ctx, client, address)
+				return contract.RemoveFromWhitelistAction(ctx, client, actorId)
 			},
 		},
 		{

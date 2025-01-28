@@ -8,20 +8,14 @@ import (
 	"wrappedeal/internal/types"
 	"wrappedeal/internal/utils"
 
-	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 // AddToWhitelistAction adds an address to the whitelist in the MarketDealWrapper contract
-func AddToWhitelistAction(ctx context.Context, client *types.ETHClient, address string) error {
-	// Validate the address
-	if !common.IsHexAddress(address) {
-		return fmt.Errorf("invalid address format: %s", address)
-	}
-	whitelistAddress := common.HexToAddress(address)
+func AddToWhitelistAction(ctx context.Context, client *types.ETHClient, actorId uint64) error {
 
 	// Prepare transaction input by encoding the method and parameters
-	input, err := client.ContractABI.Pack("addToWhitelist", whitelistAddress)
+	input, err := client.ContractABI.Pack("addToWhitelist", actorId)
 	if err != nil {
 		return fmt.Errorf("failed to pack parameters: %v", err)
 	}
@@ -43,7 +37,7 @@ func AddToWhitelistAction(ctx context.Context, client *types.ETHClient, address 
 		ContractAddress: client.ContractAddr,
 		ABI:             client.ContractABI,
 		Method:          "addToWhitelist",
-		Params:          []interface{}{whitelistAddress},
+		Params:          []interface{}{actorId},
 		Value:           nil, // No Ether to send
 	}
 

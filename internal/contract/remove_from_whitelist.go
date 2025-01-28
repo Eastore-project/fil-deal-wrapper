@@ -8,20 +8,14 @@ import (
 	"wrappedeal/internal/types"
 	"wrappedeal/internal/utils"
 
-	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 // RemoveFromWhitelistAction removes an address from the whitelist in the MarketDealWrapper contract
-func RemoveFromWhitelistAction(ctx context.Context, client *types.ETHClient, address string) error {
-	// Validate the address
-	if !common.IsHexAddress(address) {
-		return fmt.Errorf("invalid address format: %s", address)
-	}
-	whitelistAddress := common.HexToAddress(address)
+func RemoveFromWhitelistAction(ctx context.Context, client *types.ETHClient, actorId uint64) error {
 
 	// Prepare transaction input by encoding the method and parameters
-	input, err := client.ContractABI.Pack("removeFromWhitelist", whitelistAddress)
+	input, err := client.ContractABI.Pack("removeFromWhitelist", actorId)
 	if err != nil {
 		return fmt.Errorf("failed to pack parameters: %v", err)
 	}
@@ -43,7 +37,7 @@ func RemoveFromWhitelistAction(ctx context.Context, client *types.ETHClient, add
 		ContractAddress: client.ContractAddr,
 		ABI:             client.ContractABI,
 		Method:          "removeFromWhitelist",
-		Params:          []interface{}{whitelistAddress},
+		Params:          []interface{}{actorId},
 		Value:           nil, // No Ether to send
 	}
 
