@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"wrappedeal/internal/contract"
-	"wrappedeal/internal/eth"
-	"wrappedeal/internal/utils"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/contract"
+	"github.com/eastore-project/fil-deal-wrapper/internal/eth"
+	"github.com/eastore-project/fil-deal-wrapper/internal/utils"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"

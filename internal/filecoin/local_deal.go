@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"wrappedeal/internal/utils"
+	"github.com/eastore-project/fil-deal-wrapper/internal/utils"
 
 	lcli "github.com/filecoin-project/lotus/cli"
 	"github.com/urfave/cli/v2"

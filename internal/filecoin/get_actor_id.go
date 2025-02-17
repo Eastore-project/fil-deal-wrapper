@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"wrappedeal/internal/utils"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/utils"
 
 	"github.com/filecoin-project/boost/cli/node"
 	chain_types "github.com/filecoin-project/lotus/chain/types"

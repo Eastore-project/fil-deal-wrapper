@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"wrappedeal/internal/filecoin"
-	"wrappedeal/internal/utils"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/filecoin"
+	"github.com/eastore-project/fil-deal-wrapper/internal/utils"
 
 	"github.com/urfave/cli/v2"
 )

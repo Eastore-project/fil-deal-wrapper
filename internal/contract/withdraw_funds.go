@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"wrappedeal/internal/eth"
-	"wrappedeal/internal/types"
-	"wrappedeal/internal/utils"
+	"github.com/eastore-project/fil-deal-wrapper/internal/eth"
+	"github.com/eastore-project/fil-deal-wrapper/internal/types"
+	"github.com/eastore-project/fil-deal-wrapper/internal/utils"
 
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )

@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 	"os"
-	"wrappedeal/cmd"
+
+	"github.com/eastore-project/fil-deal-wrapper/cmd"
 
 	"github.com/urfave/cli/v2"
 )

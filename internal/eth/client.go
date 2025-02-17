@@ -11,8 +11,9 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
-	"wrappedeal/internal/types"
-	"wrappedeal/internal/utils"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/types"
+	"github.com/eastore-project/fil-deal-wrapper/internal/utils"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"

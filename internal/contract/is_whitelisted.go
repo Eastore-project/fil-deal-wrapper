@@ -3,7 +3,8 @@ package contract
 import (
 	"context"
 	"fmt"
-	"wrappedeal/internal/types"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/types"
 
 	"github.com/ethereum/go-ethereum"
 )
