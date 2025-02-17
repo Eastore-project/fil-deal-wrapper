@@ -9,7 +9,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"wrappedeal/internal/types"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/types"
 
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	commp "github.com/filecoin-project/go-fil-commp-hashhash"

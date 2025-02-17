@@ -1,4 +1,4 @@
-module wrappedeal
+module github.com/eastore-project/fil-deal-wrapper
 
 go 1.22.7
 

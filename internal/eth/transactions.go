@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"wrappedeal/internal/types"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"

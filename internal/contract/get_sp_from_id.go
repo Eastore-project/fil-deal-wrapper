@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"wrappedeal/internal/types"
+
+	"github.com/eastore-project/fil-deal-wrapper/internal/types"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
